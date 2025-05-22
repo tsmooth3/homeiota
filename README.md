@@ -55,21 +55,11 @@ This repository is a monorepo for a home IoT monitoring and automation system. I
 - Contains static assets for PWA support.
 - [See sveltekit.homeiota.app README](sveltekit.homeiota.app/README.md)
 
----
 
 ## Getting Started
 
 Each component can be developed and deployed independently. See the respective subdirectory README files for setup and usage instructions.
 
-### Example: Running the Web App
-
-```bash
-cd sveltekit.homeiota.app
-npm install
-npm run dev
-```
-
----
 
 ## License
 
