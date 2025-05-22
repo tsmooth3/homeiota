@@ -6,6 +6,14 @@ This repository is a monorepo for a home IoT monitoring and automation system. I
 
 ---
 
+## Prerequisites
+
+- **PostgreSQL server**: Required for the SvelteKit app and Go services. Ensure your database is running and accessible to all components.
+- **Gotify server**: Used for sending notifications/alerts from the alert service.
+- **Slack webhook**: Used by the IoT device monitors for startup notifications.
+
+---
+
 ## Project Structure
 
 - `go.alert.service/` — Go service for handling alerts and notifications. [See README](go.alert.service/README.md)
