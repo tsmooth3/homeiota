@@ -2,7 +2,7 @@
 
 Pump Monitor for Home IoT System
 
-This component is a Python-based monitor for well pump devices, designed to run on microcontrollers compatible with CircuitPython. It measures current draw, detects pump activity, and reports status to a central API and Slack.
+This component is a Python-based monitor for well pump devices, designed to run on microcontrollers compatible with CircuitPython, such as the ESP32-C3, ESP32-S3, or RP2040 (e.g., Raspberry Pi Pico W, Adafruit Feather RP2040). It measures current draw, detects pump activity, and reports status to a central API and Slack.
 
 ## Features
 - Reads analog current sensor to detect pump on/off and running state
@@ -12,11 +12,15 @@ This component is a Python-based monitor for well pump devices, designed to run 
 - Visual feedback via NeoPixel
 
 ## Requirements
-- CircuitPython-compatible board (e.g., Adafruit Feather)
+- CircuitPython-compatible board (ESP32-C3, ESP32-S3, RP2040, etc.)
 - Analog current sensor connected to A1
 - NeoPixel onboard or attached
 - WiFi credentials and API/Slack keys set as environment variables or in `settings.toml`
 - Required CircuitPython libraries in `lib/` (see below)
+
+### Where to Find CircuitPython Libraries
+- Download the latest CircuitPython libraries bundle from: https://circuitpython.org/libraries
+- Copy the required `.mpy` files and folders from the bundle to your device's `lib/` directory as listed below.
 
 ## Setup
 1. Copy `pumpmon.py`, `settings.toml`, and the `lib/` folder to your device.
