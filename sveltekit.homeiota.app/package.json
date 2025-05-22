@@ -1,0 +1,43 @@
+{
+  "name": "device-monitor",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^3.3.1",
+    "@sveltejs/adapter-node": "^5.2.12",
+    "@sveltejs/kit": "^2.20.8",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@tailwindcss/postcss": "^4.1.4",
+    "@types/bcryptjs": "^2.4.6",
+    "autoprefixer": "^10.4.21",
+    "canvas": "^3.1.0",
+    "postcss": "^8.5.3",
+    "prisma": "^6.7.0",
+    "sharp": "^0.34.1",
+    "svelte": "^4.2.12",
+    "svelte-check": "^3.6.0",
+    "tailwindcss": "^4.1.4",
+    "tslib": "^2.4.1",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.7.0",
+    "@tailwindcss/vite": "^4.1.4",
+    "bcryptjs": "^3.0.2",
+    "d3": "^7.9.0",
+    "d3-array": "^3.2.4",
+    "d3-scale": "^4.0.2",
+    "got": "^14.4.7",
+    "layercake": "^8.4.3",
+    "pg": "^8.15.6"
+  },
+  "type": "module"
+}

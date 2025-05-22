@@ -23,3 +23,65 @@ go.work.sum
 
 # env file
 .env
+
+# docker
+# docker-compose
+docker-compose.yml
+
+# circuitpython
+iot.*/lib
+*.mpy
+settings.toml
+
+# Node
+node_modules
+.npm
+.pnpm-debug.log
+.yarn-integrity
+.yarn-audit-files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SvelteKit build output
+.svelte-kit
+build/
+.vercel_build_output # For Vercel deployments
+.netlify             # For Netlify deployments
+.cloudflare          # For Cloudflare Pages deployments
+.output              # Generic output folder for some adapters
+
+# Environment variables
+.env
+.env.*
+!.env.example # You might want to include a .env.example for structure, but not the actual .env files
+
+# IDEs and OS files
+.DS_Store             # macOS
+.vscode/              # Visual Studio Code settings (if you want to ignore workspace specific settings)
+.idea/                # IntelliJ IDEA / WebStorm
+*.code-workspace      # VS Code workspace files
+Thumbs.db             # Windows
+Desktop.ini           # Windows
+
+# Logs
+logs
+*.log
+log.txt
+npm-debug.log
+yarn-debug.log
+
+# Testing
+test-results/ # Playwright or other test runner results
+
+# Other
+package-lock.json # If using npm, you typically commit this. If you regenerate often or have issues, you might temporarily ignore.
+# yarn.lock       # If using yarn, you typically commit this.
+# pnpm-lock.yaml  # If using pnpm, you typically commit this.
+
+# Vite specific
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# vscode specific
+.vscode/
