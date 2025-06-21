@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
+	"net/http"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -15,12 +15,12 @@ import (
 )
 
 type AlertPreference struct {
-	GotifyToken      sql.NullString `db:"gotifyToken"`
-	UserId           string         `db:"userId"`
-	Location         string         `db:"location"`
-	Threshold        float64        `db:"threshold"`
-	Enabled          bool           `db:"enabled"`
-	OfflineThreshold sql.NullFloat64 `db:"offlineThreshold"`
+	GotifyToken      sql.NullString 	`db:"gotifyToken"`
+	UserId           string         	`db:"userId"`
+	Location         string         	`db:"location"`
+	Threshold        float64        	`db:"threshold"`
+	Enabled          bool           	`db:"enabled"`
+	OfflineThreshold sql.NullFloat64 	`db:"offlineThreshold"`
 }
 
 type PumpRunTime struct {
@@ -33,6 +33,13 @@ type Temperature struct {
 	Timestamp time.Time `db:"timestamp"`
 }
 
+type ThresholdTemperature struct {
+	ThresholdExceededValue   		sql.NullFloat64 `db:"threshold_exceeded_value"`
+	ThresholdExceededTimestamp 	sql.NullTime   	`db:"threshold_exceeded_timestamp"`
+	LatestValue              		sql.NullFloat64 `db:"latest_value"`
+	LatestTimestamp          		sql.NullTime    `db:"latest_timestamp"`
+}
+
 type DeviceHeartbeat struct {
 	Timestamp time.Time `db:"timestamp"`
 }
@@ -43,7 +50,7 @@ func sendGotifyAlert(token, title, message string, priority int, logShort ...str
 		return
 	}
 	gotifyURL := os.Getenv("GOTIFY_URL")
-	
+
 	url := fmt.Sprintf("%s/message?token=%s", gotifyURL, token)
 	payload := map[string]interface{}{
 		"title":    title,
@@ -68,9 +75,11 @@ func main() {
 
 	log.Printf("Go alert script triggered at %s", time.Now().Format(time.RFC3339))
 
+
 	HOMEIOTA_URL := os.Getenv("HOMEIOTA_URL")
 	GOHOME_DB_URL := os.Getenv("GOHOME_DB_URL")
 	HOMEIOTA_DB_URL := os.Getenv("HOMEIOTA_DB_URL")
+
 	gohomeDBConn, err := sqlx.Open("postgres", GOHOME_DB_URL)
 	if err != nil {
 		log.Fatalf("Failed to connect to gohome db: %v", err)
@@ -91,10 +100,10 @@ func main() {
 	}
 
 	now := time.Now().UTC()
-	timeDeltaAgo := now.Add(-60 * time.Minute)
+	timeDeltaAgo := now.Add(-120 * time.Minute)
 
 	pumpResults := make(map[string][]PumpRunTime)
-	tempResults := make(map[string][]Temperature)
+	tempResults := make(map[string][]ThresholdTemperature)
 	heartbeatResults := make(map[string]bool)
 	gotifyTokens := make(map[string]string)
 	enabledMap := make(map[string]bool)
@@ -150,8 +159,17 @@ func main() {
 				heartbeatResults[location] = false
 			}
 		} else {
-			tempRows := []Temperature{}
-			tempQuery := `SELECT value, timestamp FROM temperatures WHERE location = $1 AND value > $2 AND timestamp > $3`
+			tempRows := []ThresholdTemperature{}
+			tempQuery := `
+			SELECT
+			  t1.value as threshold_exceeded_value,
+			  t1.timestamp as threshold_exceeded_timestamp,
+			  t2.value as latest_value,
+			  t2.timestamp as latest_timestamp
+			FROM
+			  (SELECT * FROM temperatures WHERE location = $1 AND value > $2 AND timestamp > $3 ORDER BY timestamp DESC LIMIT 1) t1
+			CROSS JOIN
+			  (SELECT * FROM temperatures WHERE location = $1 ORDER BY timestamp DESC LIMIT 1) t2;`
 			err := gohomeDBConn.Select(&tempRows, tempQuery, location, pref.Threshold, timeDeltaAgo)
 			if err != nil {
 				log.Printf("Temp query error: %v", err)
@@ -187,11 +205,28 @@ func main() {
 	// Send Gotify alert for each temperature result with rows
 	for location, rows := range tempResults {
 		if len(rows) > 0 && enabledMap[location] {
-			token := gotifyTokens[location]
-			title := fmt.Sprintf("Temperature Alert: %s", location)
-			message := fmt.Sprintf("Temperature for '%s' is above the threshold of %.2f°F at %s.\n\nView details: %s", location, rows[0].Value, rows[0].Timestamp.Format(time.RFC3339), HOMEIOTA_URL)
-			shortLog := fmt.Sprintf("%s Sent Gotify alert: Temperature Alert: %s: %.2f.", time.Now().Format(time.RFC3339), location, rows[0].Value)
-			sendGotifyAlert(token, title, message, 10, shortLog)
+			row := rows[0]
+			latestTemp := row.LatestValue.Float64
+			thresholdValue := thresholdMap[location]
+			thresholdExceeded := row.ThresholdExceededValue.Valid && row.ThresholdExceededValue.Float64 > thresholdValue
+			latestTempExceeded := row.LatestValue.Valid && latestTemp > thresholdValue
+
+			// fmt.Printf("Location: %s, Latest Temp: %.2f, Threshold: %.2f, latest Exceeded: %t, Threshold Exceeded: %t\n", location, latestTemp, thresholdValue, latestTempExceeded, thresholdExceeded)
+
+			var temperatureExceededTimeDelta string
+			if row.ThresholdExceededTimestamp.Valid && row.LatestTimestamp.Valid {
+				temperatureExceededTimeDelta = row.LatestTimestamp.Time.Sub(row.ThresholdExceededTimestamp.Time).String()
+			} else {
+				temperatureExceededTimeDelta = "N/A"
+			}
+
+			if latestTempExceeded && thresholdExceeded {
+				token := gotifyTokens[location]
+				title := fmt.Sprintf("TempAlert: %s : %.2f°F", location, latestTemp)
+				message := fmt.Sprintf("'%s' over %.2f°F for %s.\n\nView details: %s", location, thresholdValue, temperatureExceededTimeDelta, HOMEIOTA_URL)
+				shortLog := fmt.Sprintf("%s Sent Gotify alert: Temperature Alert: %s: %.2f.", time.Now().Format(time.RFC3339), location, latestTemp)
+				sendGotifyAlert(token, title, message, 10, shortLog)
+			}
 		}
 	}
 
@@ -207,4 +242,4 @@ func main() {
 	}
 
 	log.Printf("Go alert script completed at %s", time.Now().Format(time.RFC3339))
-} 
+}
